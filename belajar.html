@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="id" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale-1.0">
+    <title>Ngobrolin Random Forest (Versi Santai)</title>
+    <!-- Memuat Tailwind CSS untuk styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Memuat Prism.js untuk syntax highlighting kode -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+    <style>
+        /* Menggunakan font Inter sebagai font dasar */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f7fafc; /* bg-gray-100 */
+        }
+        /* Styling untuk heading */
+        h1, h2, h3, h4 {
+            font-weight: 700;
+            color: #1a202c; /* text-gray-900 */
+        }
+        h2 {
+            border-bottom: 2px solid #e2e8f0; /* border-gray-200 */
+            padding-bottom: 8px;
+            margin-top: 2.5rem; /* mt-10 */
+            margin-bottom: 1.5rem; /* mb-6 */
+        }
+        h3 {
+            margin-top: 2rem; /* mt-8 */
+            margin-bottom: 1rem; /* mb-4 */
+        }
+        /* Styling untuk code block */
+        pre[class*="language-"] {
+            border-radius: 0.5rem; /* rounded-lg */
+            padding: 1.5rem; /* p-6 */
+            margin-top: 1rem; /* mt-4 */
+            margin-bottom: 1.5rem; /* mb-6 */
+            overflow-x: auto;
+            border: 1px solid #e2e8f0;
+        }
+        /* Styling untuk inline code */
+        code:not(pre > code) {
+            background-color: #e2e8f0; /* bg-gray-200 */
+            color: #c53030; /* text-red-700 */
+            padding: 3px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', Courier, monospace;
+            font-weight: 600;
+        }
+        /* Styling untuk paragraf */
+        p, li {
+            line-height: 1.8; /* leading-relaxed */
+            color: #4a5568; /* text-gray-700 */
+            margin-bottom: 1rem; /* mb-4 */
+        }
+        /* Styling untuk blockquote (penjelasan/catatan) */
+        blockquote {
+            border-left: 4px solid #3182ce; /* border-blue-600 */
+            background-color: #ebf8ff; /* bg-blue-50 */
+            padding: 1rem 1.5rem; /* p-4 p-l-6 */
+            margin: 1.5rem 0; /* my-6 */
+            border-radius: 0 0.5rem 0.5rem 0; /* rounded-r-lg */
+        }
+        blockquote p {
+            margin-bottom: 0;
+            color: #2b6cb0; /* text-blue-800 */
+            font-style: italic;
+        }
+        blockquote strong {
+            color: #2c5282; /* text-blue-900 */
+        }
+        /* Styling untuk daftar isi (Table of Contents) */
+        #toc a {
+            transition: all 0.2s ease-in-out;
+            font-size: 0.95rem;
+        }
+        #toc a:hover {
+            color: #2b6cb0; /* text-blue-700 */
+            transform: translateX(4px);
+        }
+        #toc .active {
+            color: #2b6cb0; /* text-blue-700 */
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800">
+
+    <!-- Header Halaman -->
+    <header class="bg-white shadow-lg sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+            <h1 class="text-4xl font-bold text-gray-900 leading-tight">
+                Ngobrolin Random Forest
+            </h1>
+            <p class="mt-2 text-lg text-gray-600">
+                Bedah Tuntas Konsep & Kodingan, Pake Bahasa Santai Biar Gampang Nempel di Otak.
+            </p>
+        </div>
+    </header>
+
+    <!-- Konten Utama -->
+    <div class="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
+        <div class="flex flex-col lg:flex-row gap-12">
+
+            <!-- === NAVIGASI / DAFTAR ISI (Sticky) === -->
+            <aside class="w-full lg:w-1/4 lg:sticky lg:top-32 self-start" id="toc">
+                <div class="bg-white p-6 rounded-lg shadow-xl">
+                    <h3 class="text-xl font-semibold mb-4 text-gray-900 border-b pb-3">Daftar Isi</h3>
+                    <nav class="space-y-3">
+                        <div>
+                            <a href="#konsep" class="text-gray-600 font-medium hover:text-blue-700">1. Kenalan Sama RF</a>
+                            <ul class="ml-4 mt-2 space-y-2 text-sm list-disc list-inside">
+                                <li><a href="#apa-itu-rf" class="text-gray-500 hover:text-blue-700">RF itu Apa Sih?</a></li>
+                                <li><a href="#analogi" class="text-gray-500 hover:text-blue-700">Analogi Gampang</a></li>
+                                <li><a href="#komponen" class="text-gray-500 hover:text-blue-700">Bahan Dasarnya</a></li>
+                                <li><a href="#cara-kerja" class="text-gray-500 hover:text-blue-700">Cara Kerjanya</a></li>
+                                <li><a href="#hyperparameter" class="text-gray-500 hover:text-blue-700">Settingan Penting</a></li>
+                            </ul>
+                        </div>
+                        <div>
+                            <a href="#notebook" class="text-gray-600 font-medium hover:text-blue-700">2. Bedah Kodingan</a>
+                            <ul class="ml-4 mt-2 space-y-2 text-sm list-disc list-inside">
+                                <li><a href="#langkah1" class="text-gray-500 hover:text-blue-700">Langkah 1: Ambil Data</a></li>
+                                <li><a href="#langkah2" class="text-gray-500 hover:text-blue-700">Langkah 2: Pilah-Pilah Data</a></li>
+                                <li><a href="#langkah3" class="text-gray-500 hover:text-blue-700">Langkah 3: Latih Model</a></li>
+                                <li><a href="#langkah4" class="text-gray-500 hover:text-blue-700">Langkah 4: Cek Rapor (Bonus)</a></li>
+                                <li><a href="#langkah5" class="text-gray-500 hover:text-blue-700">Langkah 5: Tes Nebak Langsung</a></li>
+                            </ul>
+                        </div>
+                        <div>
+                            <a href="#kesimpulan" class="text-gray-600 font-medium hover:text-blue-700">3. Penutup & Ide Lain</a>
+                        </div>
+                    </nav>
+                </div>
+            </aside>
+
+            <!-- === KONTEN UTAMA (Kanan) === -->
+            <main class="w-full lg:w-3/4 bg-white p-8 sm:p-10 rounded-lg shadow-2xl">
+                
+                <!-- === BAGIAN 1: KONSEP RANDOM FOREST === -->
+                <section id="konsep">
+                    <h2 class="text-3xl font-bold text-blue-700">1. Kenalan Sama Random Forest (Pake Bahasa Santai)</h2>
+                    
+                    <p id="apa-itu-rf">
+                        <strong>Random Forest</strong> (Hutan Acak) itu salah satu 'jurus' <em>machine learning</em> paling sakti dan sering dipake. Bisa buat tugas <strong>klasifikasi</strong> (nebak kategori, kayak "Sehat" vs "Tidak Sehat" di kodemu) atau <strong>regresi</strong> (nebak angka, kayak harga rumah).
+                    </p>
+                    <p>
+                        RF ini masuk geng <em>ensemble learning</em>. Ibaratnya, dia nggak jago sendirian. Dia itu model yang mainnya <strong>"keroyokan"</strong>. Dia gabungin banyak model 'cupu' (si Pohon Keputusan) buat jadi satu model 'jawara' yang super akurat dan nggak gampang salah tebak.
+                    </p>
+
+                    <h3 id="analogi" class="text-2xl">Analogi Gampang: Minta Pendapat Sekampung</h3>
+                    <p>
+                        Bayangin kamu mau nebak makanan ini "Sehat" atau "Tidak Sehat".
+                    </p>
+                    <ul class="list-disc list-inside space-y-3 pl-4">
+                        <li>
+                            <strong>Satu Pohon Keputusan (Decision Tree):</strong> Kamu nanya ke <strong>satu orang ahli gizi</strong>. Dia mungkin pinter, tapi bisa aja dia *sok tahu* atau punya aturan kaku ("Pokoknya kalo gula di atas 15g, PASTI Gak Sehat!"). Orang ini bisa aja bias atau terlalu kaku. Ibarat <strong>"katak dalam tempurung"</strong>, dia cuma tahu aturan dia aja.
+                        </li>
+                        <li>
+                            <strong>Random Forest:</strong> Nah, daripada nanya satu orang, kamu kumpulin <strong>100 ahli gizi (satu "hutan" ahli)</strong>. Tiap ahli kamu kasih data yang beda-beda dikit, dan cuma boleh lihat info tertentu (ada yang ahli Gula & Kalori, ada yang ahli Lemak & Protein).
+                        </li>
+                        <li>
+                            <strong>Keputusan Akhir:</strong> Kamu tanya ke 100 ahli itu. Kalo 80 bilang "Sehat" dan 20 bilang "Tidak Sehat", kamu ambil suara terbanyak ("Sehat"). Kayak kata pepatah, <strong>"banyak kepala lebih baik daripada satu"</strong>. Keputusan rame-rame ini jauh lebih bijak dan nggak gampang kepengaruh sama satu ahli yang 'sesat'.
+                        </li>
+                    </ul>
+                    
+
+                    <h3 id="komponen" class="text-2xl">Bahan Dasar Random Forest</h3>
+                    
+                    <h4>1. Decision Tree (Pohon Keputusan)</h4>
+                    <p>
+                        Ini 'rakyat'-nya si Random Forest. Model paling dasar. Bentuknya kayak diagram alur yang isinya pertanyaan "iya/nggak" buat misahin data sampe akhirnya ketemu jawaban.
+                        <br>Contoh: <code>Gulanya > 10g?</code> -> <code>(Iya) Lemaknya > 20g?</code> -> <code>(Iya) = "Tidak Sehat"</code>.
+                    </p>
+
+                    <h4>2. Ensemble Learning</h4>
+                    <p>
+                        Ini tekniknya: gabungin beberapa model buat dapetin hasil yang lebih jago daripada model-model itu kalo kerja sendirian.
+                    </p>
+                    
+                    <h4>3. Bagging (Bootstrap Aggregating)</h4>
+                    <p>
+                        Ini jantungnya si RF. Gini ceritanya:
+                    </p>
+                    <ul class="list-decimal list-inside space-y-2 pl-4">
+                        <li><strong>Bootstrap:</strong> Kamu punya 100 data makanan. Buat bikin "Pohon 1", kamu ambil 100 data *ngacak* dari 100 data tadi (tapi boleh ambil data yang sama berkali-kali). Jadi, ada data yang keambil 2-3 kali, ada yang nggak keambil sama sekali.</li>
+                        <li><strong>Aggregating:</strong> Tiap pohon 'belajar' dari data 'bootstrap'-nya yang unik tadi. Pas nebak, hasilnya 'diagregasi' alias dikumpulin buat <strong>voting</strong>.</li>
+                    </ul>
+                    
+                    <h4>4. Feature Randomness (Keacakan Fitur)</h4>
+                    <p>
+                        Ini bagian "Random" yang kedua. Pas si pohon lagi 'belajar' (nentuin pertanyaan terbaik), dia nggak boleh lihat *semua* fitur ('Protein', 'Lemak', 'Gula', 'Kalori'). Dia cuma boleh milih dari *sebagian* fitur yang diacak (misal, cuma boleh milih antara 'Protein' dan 'Gula'). Ini penting biar pohon-pohonnya nggak jadi mirip semua.
+                    </p>
+
+                    <h3 id="cara-kerja" class="text-2xl">Gimana Cara Kerjanya? (Singkat Aja)</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="bg-gray-50 p-5 rounded-lg border-l-4 border-blue-500">
+                            <h4 class="text-xl font-semibold mb-2">Cara Nglatihnya (Training)</h4>
+                            <ol class="list-decimal list-inside space-y-2">
+                                <li>Tentukan mau bikin berapa pohon (<code>n_estimators</code>), misal 100.</li>
+                                <li>Ulangi 100 kali:</li>
+                                <li>Ambil data 'bootstrap' (data acak).</li>
+                                <li>Latih satu Pohon Keputusan pake data acak tadi.</li>
+                                <li>Pas pohonnya 'tumbuh', di tiap cabangnya, pilih fitur terbaik dari *sebagian* fitur yang diacak.</li>
+                                <li>Jadi deh 100 pohon yang beda-beda.</li>
+                            </ol>
+                        </div>
+                        <div class="bg-gray-50 p-5 rounded-lg border-l-4 border-green-500">
+                            <h4 class="text-xl font-semibold mb-2">Cara Nebaknya (Prediction)</h4>
+                            <ol class="list-decimal list-inside space-y-2">
+                                <li>Ambil data baru yang mau ditebak.</li>
+                                <li>Lemparkan data itu ke <strong>semua 100 pohon</strong> di hutan.</li>
+                                <li>Tiap pohon ngasih tebakan (Pohon 1: "Sehat", Pohon 2: "Tidak Sehat", ...).</li>
+                                <li>Kumpulin semua 100 tebakan itu.</li>
+                                <li>Lakuin <strong>voting (suara terbanyak)</strong>. Kalo 70 bilang "Sehat" & 30 bilang "Tidak Sehat", ya menang "Sehat". Gitu!</li>
+                            </ol>
+                        </div>
+                    </div>
+
+                    <h3 id="hyperparameter" class="text-2xl">Settingan Penting (Hyperparameter)</h3>
+                    <p>
+                        Di kodemu, kamu nulis <code>RandomForestClassifier(n_estimators=100, random_state=42)</code>. Artinya:
+                    </p>
+                    <ul class="list-disc list-inside space-y-2 pl-4">
+                        <li>
+                            <code><strong>n_estimators=100</strong></code>: Ini settingan paling penting. <strong>Jumlah pohon</strong> di hutanmu. Makin banyak pohon, makin akurat (tapi makin lama nglatihnya). 100 itu angka awal yang bagus.
+                        </li>
+                        <li>
+                            <code><strong>random_state=42</strong></code>: Ini bukan buat performa, tapi biar hasilnya <strong>konsisten</strong>. Angka 42 (bisa angka apa aja) itu kayak 'jimat' buat semua proses acak. Biar kalo kodenya dijalanin ulang, hasilnya *plek ketiplek* sama. Wajib dipake biar gampang nge-cek.
+                        </li>
+                        <li>
+                            <code><strong>max_depth</strong></code> (Nggak kamu pake, tapi penting): Ini nentuin "kedalaman" si pohon. Biar pohonnya nggak 'tumbuh' ketinggian dan jadi *overfitting* (terlalu hapal sama data latih).
+                        </li>
+                    </ul>
+                </section>
+
+                <!-- === BAGIAN 2: ANALISIS NOTEBOOK === -->
+                <section id="notebook">
+                    <h2 class="text-3xl font-bold text-blue-700">2. Bedah Kodingan <code>RANDOM_FOREST.ipynb</code> Kamu</h2>
+                    <p>
+                        Oke, sekarang kita 'kuliti' kodingan kamu satu-satu. Tujuannya kan mau nebak makanan itu <strong>"Sehat"</strong> atau <strong>"Tidak Sehat"</strong> dari info gizinya.
+                    </p>
+
+                    <!-- === Langkah 1 === -->
+                    <h3 id="langkah1" class="text-2xl">Langkah 1: Import 'Perkakas' & Ambil Data</h3>
+                    <p>
+                        Langkah wajib: siapin 'perkakas' (library) dan 'bahan baku' (data).
+                    </p>
+                    
+                    <h4 class="text-lg font-semibold">Kode dari Notebook (Cell 1):</h4>
+<pre><code class="language-python"># Import library penting buat nanganin data
+import pandas as pd
+
+# Ini link Google Sheet-nya, nanti datanya diambil dari sini
+google_sheet_url = 'https://docs.google.com/spreadsheets/d/1NrENipopsBY8YroI9B2wId1FLlgOoRmdGAspkVXZpgM/export?format=csv&gid=1322952561'
+
+# Baca datanya terus simpan di DataFrame namanya `df`
+df = pd.read_csv(google_sheet_url)
+
+# Intip 5 baris pertama datanya biar tahu isinya kayak gimana
+print('5 baris pertama data kita:')
+display(df.head())
+
+# Cek info datanya, ada berapa kolom, tipe datanya apa aja, ada yang kosong nggak
+print('\nInfo lengkap datanya:')
+df.info()
+</code></pre>
+                    
+                    <h4 class="text-lg font-semibold mt-6">Penjelasan Kode (Versi Santai):</h4>
+                    <ul class="list-disc list-inside space-y-3 pl-4">
+                        <li>
+                            <code>import pandas as pd</code>: Nge-load 'perkakas' utama buat ngolah data, namanya <strong>Pandas</strong>. Kita singkat jadi <code>pd</code> biar gampang manggilnya.
+                        </li>
+                        <li>
+                            <code>google_sheet_url = ...</code>: Kamu nyimpen link Google Sheet. Trik <code>/export?format=csv</code> di belakangnya itu keren, bikin sheet-nya langsung ke-download jadi file CSV.
+                        </li>
+                        <li>
+                            <code>df = pd.read_csv(google_sheet_url)</code>: Ini perintah buat Pandas: "Tolong ambilin data dari link itu, terus masukin ke 'kotak' data yang namanya <code>df</code>."
+                        </li>
+                        <li>
+                            <code>display(df.head())</code>: Ini buat <strong>'ngintip'</strong> 5 baris pertama data. Penting banget biar kita tahu datanya beneran masuk apa nggak, dan nama kolomnya apa aja.
+                        </li>
+                        <li>
+                            <code>df.info()</code>: Ini kayak <strong>'General Check-Up'</strong> data kita. Dari sini kita tahu:
+                            <ul>
+                                <li><strong>RangeIndex: 97 entries</strong>: Oh, ada 97 baris data.</li>
+                                <li><strong>Non-Null Count</strong>: Semuanya 97 non-null. Artinya <strong>nggak ada data yang bolong (missing)</strong>. Bagus, kerjaan kita lebih gampang!</li>
+                                <li><strong>Dtype</strong>: Tipe datanya (<code>object</code> itu teks, <code>int64</code> itu angka).</li>
+                            </ul>
+                        </li>
+                    </ul>
+
+                    <!-- === Langkah 2 === -->
+                    <h3 id="langkah2" class="text-2xl">Langkah 2: Pilah-Pilah Fitur (X) & Target (y)</h3>
+                    <p>
+                        Datanya udah ada. Sekarang kita pisahin mana 'bahan' buat nebak, mana 'jawaban' yang mau ditebak.
+                    </p>
+                    <ol class="list-decimal list-inside space-y-2 pl-4">
+                        <li><strong>Fitur (X)</strong>: 'Bahan-bahan' input buat nebak (Protein, Lemak, Gula, Kalori).</li>
+                        <li><strong>Target (y)</strong>: 'Jawabannya' (Si 'Status' Sehat/Tidak Sehat).</li>
+                    </ol>
+
+                    <h4 class="text-lg font-semibold">Kode dari Notebook (Cell 3):</h4>
+<pre><code class="language-python"># Import ini buat ubah kategori teks jadi angka, soalnya model ML sukanya angka
+from sklearn.preprocessing import LabelEncoder
+
+# Tentukan kolom-kolom yang jadi fitur kita (ini X-nya)
+features = ['Protein (gram)', 'Lemak (gram)', 'Gula (gram)', 'Kalori (kkal)']
+X = df[features]
+
+# Tentukan kolom target kita (ini y-nya)
+y = df['Status']
+
+# Cek dulu unique value di target, biar tahu ada berapa kategori
+print('Kategori unik di kolom target:')
+print(y.unique())
+
+# Nah, karena targetnya masih teks ('Sehat', 'Tidak Sehat'), kita ubah jadi angka pakai LabelEncoder
+le = LabelEncoder()
+y_encoded = le.fit_transform(y)
+
+# Tunjukin mapping-nya biar kita tahu 'Sehat' jadi angka berapa, 'Tidak Sehat' jadi angka berapa
+print('\nMapping Kategori ke Angka:')
+for i, item in enumerate(le.classes_):
+    print(f'{item} -> {i}')
+
+# Intip data X dan y yang udah disiapin
+print('\nContoh data Fitur (X) dan Target (y) setelah encoding:')
+display(X.head())
+display(pd.DataFrame(y_encoded, columns=['Kategori_Encoded']).head())
+</code></pre>
+
+                    <h4 class="text-lg font-semibold mt-6">Penjelasan Kode (Versi Santai):</h4>
+                    <ul class="list-disc list-inside space-y-3 pl-4">
+                        <li>
+                            <code>features = [...]</code>: Kamu bikin 'contekan' nama-nama kolom yang jadi 'bahan' nebak.
+                        </li>
+                        <li>
+                            <code>X = df[features]</code>: Bikin 'kotak' <code>X</code> yang isinya cuma 4 kolom 'bahan' tadi.
+                        </li>
+                        <li>
+                            <code>y = df['Status']</code>: Bikin 'kotak' <code>y</code> yang isinya cuma kolom 'jawaban' (Status).
+                        </li>
+                    </ul>
+                    
+                    <blockquote>
+                        <strong>Ngapain Pake <code>LabelEncoder</code>?</strong>
+                        <p>
+                            Singkatnya: <strong>Komputer itu nggak ngerti bahasa manusia</strong>. Dia nggak tahu 'Sehat' itu apa. Dia cuma ngerti angka.
+                            <br><br>
+                            <code>LabelEncoder</code> itu 'kamus' penerjemah buat ngubah teks "Sehat" jadi angka <code>0</code> dan "Tidak Sehat" jadi <code>1</code>.
+                        </p>
+                    </blockquote>
+
+                    <ul class="list-disc list-inside space-y-3 pl-4 mt-4">
+                        <li>
+                            <code>le = LabelEncoder()</code>: Bikin 'kamus'-nya dulu.
+                        </li>
+                        <li>
+                            <code>y_encoded = le.fit_transform(y)</code>: Ini jurus <strong>"sambil menyelam minum air"</strong>.
+                            <ul>
+                                <li><code><strong>fit()</strong></code>: Si kamus 'belajar' dulu, "Oh, di kolom ini cuma ada 2 kata: 'Sehat' dan 'Tidak Sehat'."</li>
+                                <li><code><strong>transform()</strong></code>: Si kamus 'nerjemahin' semua isi kolom <code>y</code> jadi angka (0 dan 1).</li>
+                            </ul>
+                        </li>
+                        <li>
+                            <code>for i, item in enumerate(le.classes_): ...</code>: Ini kamu pinter, kamu cetak isi 'kamus'-nya. Jadi kita tahu (<code>Sehat -> 0</code>, <code>Tidak Sehat -> 1</code>). Ini penting buat nerjemahin balik nanti.
+                        </li>
+                    </ul>
+
+                    <!-- === Langkah 3 === -->
+                    <h3 id="langkah3" class="text-2xl">Langkah 3: Belah Data & Latih si Model</h3>
+                    <p>
+                        Ini bagian intinya. Kita nggak boleh ngasih 'bocoran soal' ke model. Kalo data 'belajar' dan data 'ujian' sama, itu curang. Namanya juga *overfitting*.
+                    </p>
+                    <p>
+                        Jadi, datanya kita 'belah':
+                    </p>
+                    <ul class="list-disc list-inside space-y-2 pl-4">
+                        <li><strong>Data Latih (Training Set)</strong>: 80% data buat 'belajar' (nge-gym).</li>
+                        <li><strong>Data Uji (Test Set)</strong>: 20% data buat 'ujian' (yang disimpen rahasia).</li>
+                    </ul>
+
+                    <h4 class="text-lg font-semibold">Kode dari Notebook (Cell 5):</h4>
+<pre><code class="language-python"># Import yang dibutuhkan buat ngebagi data dan bikin model Random Forest
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import accuracy_score
+
+# Bagi data kita jadi data latih dan data uji
+# test_size=0.2 artinya 20% data buat uji, 80% buat latih
+# random_state=42 biar hasilnya konsisten tiap kali jalanin kode ini
+X_train, X_test, y_train, y_test = train_test_split(X, y_encoded, test_size=0.2, random_state=42)
+
+print(f'Jumlah data latih: {len(X_train)} dataset') # 77 data
+print(f'Jumlah data uji: {len(X_test)} dataset') # 20 data
+
+# Bikin objek model Random Forest Classifier
+# n_estimators=100 artinya kita pakai 100 pohon keputusan di hutan kita
+model_rf = RandomForestClassifier(n_estimators=100, random_state=42)
+
+# Latih modelnya pakai data latih kita (X_train dan y_train)
+print('\nLagi melatih model Random Forest...')
+model_rf.fit(X_train, y_train)
+print('Model selesai dilatih! 🎉')
+
+# Sekarang kita prediksi pakai data uji (X_test)
+y_pred = model_rf.predict(X_test)
+
+# Cek seberapa akurat model kita dalam memprediksi
+accuracy = accuracy_score(y_test, y_pred)
+print(f'\nAkurasinya model kita di data uji: {accuracy:.2f} (atau {accuracy*100:.2f}%)')
+
+# Kita intip juga beberapa hasil prediksi dan nilai aslinya
+print('\nContoh beberapa prediksi vs. nilai asli:')
+results_df = pd.DataFrame({
+    'Aktual': le.inverse_transform(y_test),
+    'Prediksi': le.inverse_transform(y_pred)
+})
+display(results_df.head())
+</code></pre>
+
+                    <h4 class="text-lg font-semibold mt-6">Penjelasan Kode (Versi Santai):</h4>
+                    <ul class="list-disc list-inside space-y-3 pl-4">
+                        <li>
+                            <code>train_test_split</code>: Ini 'pisau' buat ngebelah datanya.
+                        </li>
+                        <li>
+                            <code>X_train, X_test, y_train, y_test = train_test_split(...)</code>: Datanya dikocok, terus dibelah jadi 4: <code>X_train</code> + <code>y_train</code> (paket 'belajar') dan <code>X_test</code> + <code>y_test</code> (paket 'ujian').
+                        </li>
+                        <li>
+                            <code>model_rf = RandomForestClassifier(...)</code>: Ini kita 'bangun' pabrik modelnya. "Saya mau pabrik Hutan Acak, isinya 100 pohon, pake jimat 42."
+                        </li>
+                        <li>
+                            <code>model_rf.fit(X_train, y_train)</code>: Ini perintah <strong>"SANA BELAJAR!"</strong>. Modelnya 'nge-gym' pake data <code>X_train</code> dan <code>y_train</code> buat ngenalin pola. Ini proses yang paling berat.
+                        </li>
+                        <li>
+                            <code>y_pred = model_rf.predict(X_test)</code>: Ini perintah <strong>"COBA TEBAK!"</strong>. Modelnya dikasih 'soal ujian' (<code>X_test</code>) yang belum pernah dia lihat, terus disuruh nebak jawabannya.
+                        </li>
+                        <li>
+                            <code>accuracy = accuracy_score(y_test, y_pred)</code>: Ini kita 'cek rapor'-nya. <code>y_test</code> itu 'kunci jawaban'. <code>y_pred</code> itu 'lembar jawaban' si model. Kita cocokin, dapetlah akurasi 75% (bener 3 dari 4 soal, lumayan!).
+                        </li>
+                        <li>
+                            <code>le.inverse_transform(...)</code>: Kita 'terjemahin' balik jawabannya. Kan <code>y_test</code> dan <code>y_pred</code> isinya 0 dan 1. Biar kita ngerti, kita ubah balik jadi "Sehat" / "Tidak Sehat" pake 'kamus' <code>le</code> tadi.
+                        </li>
+                    </ul>
+
+                    <!-- === Langkah 4 (Tambahan) === -->
+                    <h3 id="langkah4" class="text-2xl">Langkah 4: Cek Rapor Lebih Dalam (Contoh Bonus)</h3>
+                    <p>
+                        Akurasi 75% itu lumayan. Tapi biar makin yakin, kita bisa 'interogasi' modelnya lebih dalem pake <strong>Confusion Matrix</strong>.
+                    </p>
+                    <p>
+                        Ini nggak ada di kodemu, tapi ini bagus banget buat ditambahin. Tujuannya biar kita tahu: <strong>Si model ini sering salah nebak di bagian mana?</strong>
+                    </p>
+
+                    <h4 class="text-lg font-semibold">Contoh Kode Tambahan (Biar Makin Jago):</h4>
+<pre><code class="language-python"># Import 'perkakas' buat interogasi
+from sklearn.metrics import confusion_matrix, classification_report
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+# 1. Classification Report (Rapor Lengkap)
+print("--- Rapor Lengkap Model ---")
+print(classification_report(y_test, y_pred, target_names=le.classes_))
+
+
+# 2. Confusion Matrix (Peta Kebingungan)
+print("\n--- Peta Kebingungan ---")
+cm = confusion_matrix(y_test, y_pred)
+print(cm)
+
+# Bikin gambarnya biar enak diliat
+plt.figure(figsize=(7, 5))
+sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', 
+            xticklabels=le.classes_, yticklabels=le.classes_)
+plt.title('Peta Kebingungan Model')
+plt.ylabel('Aslinya (Kunci Jawaban)')
+plt.xlabel('Tebakan Model')
+plt.show()
+</code></pre>
+                    
+                    <h4 class="text-lg font-semibold mt-6">Penjelasan Kode Tambahan:</h4>
+                    <ul class="list-disc list-inside space-y-3 pl-4">
+                        <li>
+                            <code>classification_report</code>: Ini ngasih rapor super lengkap. Nggak cuma akurasi, tapi juga 'Precision' (seberapa yakin kalo dia nebak 'Sehat'?) dan 'Recall' (dari semua yang 'Sehat', berapa yang ketebak?).
+                        </li>
+                        <li>
+                            <code>confusion_matrix</code>: Ini 'peta'-nya. Gampangnya gini:
+                            <div class="overflow-x-auto my-4">
+                                <table class="min-w-full bg-white border border-gray-300">
+                                    <thead>
+                                        <tr class="bg-gray-100">
+                                            <th class="border px-4 py-2"></th>
+                                            <th class="border px-4 py-2" colspan="2">Tebakan Model</th>
+                                        </tr>
+                                        <tr class="bg-gray-50">
+                                            <th class="border px-4 py-2">Aslinya</th>
+                                            <th class="border px-4 py-2">Nebak: Sehat (0)</th>
+                                            <th class="border px-4 py-2">Nebak: Tdk Sehat (1)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td class="border px-4 py-2 font-medium">Aslinya: Sehat (0)</td>
+                                            <td class="border px-4 py-2 bg-green-100 text-green-800"><b>Benar (TN)</b></td>
+                                            <td class="border px-4 py-2 bg-red-100 text-red-800"><b>Salah (FP)</b><br>(Aslinya Sehat, ditebak Gak Sehat)</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="border px-4 py-2 font-medium">Aslinya: Tdk Sehat (1)</td>
+                                            <td class="border px-4 py-2 bg-red-100 text-red-800"><b>Salah (FN)</b><br>(Aslinya Gak Sehat, ditebak Sehat)</td>
+                                            <td class="border px-4 py-2 bg-green-100 text-green-800"><b>Benar (TP)</b></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <p>Kita mau angka di kotak hijau (Benar) setinggi mungkin, dan angka di kotak merah (Salah) sekecil mungkin.</p>
+                        </li>
+                    </ul>
+
+                    <!-- === Langkah 5 === -->
+                    <h3 id="langkah5" class="text-2xl">Langkah 5: Tes Nebak Langsung (Interaktif)</h3>
+                    <p>
+                        Ini bagian paling asyik! Modelnya udah 'lulus' (dilatih) dan siap 'kerja' buat nebak data baru.
+                    </p>
+                    <p>
+                        Kamu pake 'sihir'-nya Colab (<code>#@param</code>) buat bikin form isian. Keren!
+                    </p>
+
+                    <h4 class="text-lg font-semibold">Kode dari Notebook (Cell 7):</h4>
+<pre><code class="language-python">#@markdown --- Input Nilai Gizi Makanan ---
+# Pakai `#@param` biar muncul form inputnya di Colab
+food_name_input = "BOLU" #@param {type:"string"}
+protein_input = 15 #@param {type:"number"}
+fat_input = 10 #@param {type:"number"}
+carbohydrate_input = 30 #@param {type:"number"}
+calorie_input = 200 #@param {type:"number"}
+
+# Bikin data baru dari inputan kamu
+# Perhatikan urutan kolomnya HARUS SAMA dengan `features` saat melatih
+new_data = pd.DataFrame([[protein_input, fat_input, carbohydrate_input, calorie_input]],
+                        columns=features)
+
+print(f'Nama Makanan: {food_name_input}')
+print(f'Data yang yang di masukkan: Protein={protein_input}g, Lemak={fat_input}g, Karbohidrat={carbohydrate_input}g, Kalori={calorie_input}kkal')
+
+# Model kita prediksi kategorinya
+prediction_encoded = model_rf.predict(new_data)
+
+# Ubah hasil prediksi angka jadi teks lagi ('Sehat' atau 'Tidak Sehat')
+predicted_category = le.inverse_transform(prediction_encoded)
+
+print(f'\nPrediksi untuk {food_name_input} ini: {predicted_category[0]}')
+</code></pre>
+
+                    <h4 class="text-lg font-semibold mt-6">Penjelasan Kode (Versi Santai):</h4>
+                    <ul class="list-disc list-inside space-y-3 pl-4">
+                        <li>
+                            <code>#@param {type:"..."}</code>: Ini 'mantra'-nya Colab buat nampilin form isian.
+                        </li>
+                        <li>
+                            <code>new_data = pd.DataFrame(...)</code>: Ini langkah <strong>KRUSIAL</strong>. Model itu nggak nerima 4 angka doang (15, 10, 30, 200). Dia maunya data dibungkus rapi pake 'kotak' <strong>DataFrame</strong>, persis kayak pas dia 'belajar'.
+                        </li>
+                        <li>
+                            <code>[[...]]</code>: Tanda kurung siku dobel itu buat bilang "ini data 1 baris, tapi bentuknya tabel".
+                        </li>
+                        <li>
+                            <code>columns=features</code>: Ini <strong>PALING PENTING</strong>. Kita bilang ke Pandas, "Angka pertama itu 'Protein', kedua 'Lemak', dst." Urutannya harus *plek ketiplek* sama daftar <code>features</code> di Langkah 2. Kalo kebalik, hasil tebakannya bakal *ngaco*.
+                        </li>
+                        <li>
+                            <code>prediction_encoded = model_rf.predict(new_data)</code>: Perintah "Hei model, tebak data baru ini!" Modelnya bakal ngeluarin angka (<code>[0]</code> atau <code>[1]</code>).
+                        </li>
+                        <li>
+                            <code>predicted_category = le.inverse_transform(...)</code>: Angkanya kita 'terjemahin' balik pake 'kamus' <code>le</code>.
+                        </li>
+                        <li>
+                            <code>print(f'...')</code>: Tunjukin hasilnya ke pengguna. <strong>"Pucuk dicinta ulam tiba!"</strong>, hasil prediksinya keluar!
+                        </li>
+                    </ul>
+
+                </section>
+                
+                <!-- === BAGIAN 3: KESIMPULAN === -->
+                <section id="kesimpulan">
+                    <h2 class="text-3xl font-bold text-blue-700">3. Penutup & Ide Lain</h2>
+                    
+                    <h3 class="text-2xl">Kesimpulan Proyekmu</h3>
+                    <p>
+                        Keren! Di notebook ini kamu udah sukses ngelakuin semua 'ritual' wajib seorang *data scientist*:
+                    </p>
+                    <ol class="list-decimal list-inside space-y-2 pl-4">
+                        <li><strong>Ngambil Data</strong> (Data Loading)</li>
+                        <li><strong>Beres-beres Data</strong> (Preprocessing & Label Encoding)</li>
+                        <li><strong>Milah-milah Data</strong> (Feature Engineering)</li>
+                        <li><strong>Nglatih Model</strong> (Model Training)</li>
+                        <li><strong>Ngecek Rapor Model</strong> (Evaluation)</li>
+                        <li><strong>Nyoba Modelnya</strong> (Simple Deployment)</li>
+                    </ol>
+                    <p>
+                        Ini proyek yang solid banget buat paham alur kerja klasifikasi pake Random Forest.
+                    </p>
+
+                    <h3 class="text-2xl">Si RF Ini Bisa Dipake Buat Apa Lagi?</h3>
+                    <p>
+                        Jurus Random Forest ini fleksibel banget. Bisa dipake buat macem-macem:
+                    </p>
+                    <ul class="list-disc list-inside space-y-2 pl-4">
+                        <li>
+                            <strong>Nge-filter Email Sampah (Spam)</strong>:
+                            <ul>
+                                <li><strong>Fitur (X)</strong>: Jumlah kata "gratis", "diskon", ada tanda seru, panjang email.</li>
+                                <li><strong>Target (y)</strong>: "Spam" atau "Bukan Spam".</li>
+                            </ul>
+                        </li>
+                        <li>
+                            <strong>Nebak Harga Rumah (Regresi)</strong>:
+                            <ul>
+                                <li><strong>Model</strong>: Pake saudaranya, <code>RandomForest<strong>Regressor</strong></code>.</li>
+                                <li><strong>Fitur (X)</strong>: Jumlah kamar, luas tanah, lokasi.</li>
+                                <li><strong>Target (y)</strong>: "Harga Rumah" (misal 150000).</li>
+                            </ul>
+                        </li>
+<li>
+                            <strong>Ngebantu Dokter (Diagnostik Medis)</strong>:
+                            <ul>
+                                <li><strong>Fitur (X)</strong>: Hasil tes darah, umur, berat badan, tekanan darah.</li>
+                                <li><strong>Target (y)</strong>: "Kena Penyakit" atau "Enggak".</li>
+                            </ul>
+                        </li>
+                    </ul>
+
+                </section>
+            </main>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 mt-16">
+        <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8 text-center">
+            <p class="text-gray-400 text-sm">
+                Dokumentasi ini dibuat (dan di-santai-in) oleh AI berdasarkan file <code>RANDOM_FOREST.ipynb</code>.
+            </p>
+        </div>
+    </footer>
+
+    <!-- Memuat script Prism.js di akhir body -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+    <script>
+        // Inisialisasi Prism.js untuk menyorot semua blok kode
+        Prism.highlightAll();
+    </script>
+</body>
+</html>
